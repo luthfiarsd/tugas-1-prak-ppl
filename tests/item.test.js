@@ -54,6 +54,75 @@ describe("GET /api/items", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.data.total).toBe(1);
   });
+
+  it("harus bisa search berdasarkan kategori", async () => {
+    const res = await request(app).get("/api/items?search=Furnitur");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.total).toBe(1);
+    expect(res.body.data.items[0].category).toBe("Furnitur");
+  });
+
+  it("harus bisa search yang cocok di nama dan kategori sekaligus", async () => {
+    const res = await request(app).get("/api/items?search=Test");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.total).toBe(2);
+  });
+
+  it("harus bisa filter berdasarkan minPrice", async () => {
+    const res = await request(app).get("/api/items?minPrice=300000");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.total).toBe(1);
+    expect(res.body.data.items[0].price).toBeGreaterThanOrEqual(300000);
+  });
+
+  it("harus bisa filter berdasarkan maxPrice", async () => {
+    const res = await request(app).get("/api/items?maxPrice=300000");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.total).toBe(1);
+    expect(res.body.data.items[0].price).toBeLessThanOrEqual(300000);
+  });
+
+  it("harus bisa filter berdasarkan rentang harga minPrice dan maxPrice", async () => {
+    const res = await request(app).get(
+      "/api/items?minPrice=100000&maxPrice=600000",
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.total).toBe(2);
+  });
+
+  it("harus mengabaikan minPrice yang bukan angka", async () => {
+    const res = await request(app).get("/api/items?minPrice=abc");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.total).toBe(2);
+  });
+
+  it("harus bisa sort berdasarkan price ascending", async () => {
+    const res = await request(app).get("/api/items?sortBy=price&order=asc");
+    expect(res.statusCode).toBe(200);
+    const prices = res.body.data.items.map((i) => i.price);
+    expect(prices[0]).toBeLessThanOrEqual(prices[1]);
+  });
+
+  it("harus bisa sort berdasarkan price descending", async () => {
+    const res = await request(app).get("/api/items?sortBy=price&order=desc");
+    expect(res.statusCode).toBe(200);
+    const prices = res.body.data.items.map((i) => i.price);
+    expect(prices[0]).toBeGreaterThanOrEqual(prices[1]);
+  });
+
+  it("harus bisa sort berdasarkan name ascending", async () => {
+    const res = await request(app).get("/api/items?sortBy=name&order=asc");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.items[0].name <= res.body.data.items[1].name).toBe(
+      true,
+    );
+  });
+
+  it("harus mengabaikan sortBy field yang tidak valid", async () => {
+    const res = await request(app).get("/api/items?sortBy=invalid");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.total).toBe(2);
+  });
 });
 
 describe("GET /api/items/:id", () => {

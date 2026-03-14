@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+.env
+.env.local
+*.log
+npm-debug.log*
+dist/
+audit-report.json

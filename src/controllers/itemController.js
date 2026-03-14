@@ -21,7 +21,7 @@ const validateItem = ({ name, category, quantity, price }) => {
 };
 
 const getAllItems = (req, res) => {
-  const { category, search } = req.query;
+  const { category, search, minPrice, maxPrice, sortBy, order } = req.query;
   let result = [...items];
 
   if (category) {
@@ -31,9 +31,32 @@ const getAllItems = (req, res) => {
   }
 
   if (search) {
-    result = result.filter((item) =>
-      item.name.toLowerCase().includes(search.toLowerCase()),
+    const keyword = search.toLowerCase();
+    result = result.filter(
+      (item) =>
+        item.name.toLowerCase().includes(keyword) ||
+        item.category.toLowerCase().includes(keyword),
     );
+  }
+
+  if (minPrice !== undefined) {
+    const min = parseFloat(minPrice);
+    if (!isNaN(min)) result = result.filter((item) => item.price >= min);
+  }
+
+  if (maxPrice !== undefined) {
+    const max = parseFloat(maxPrice);
+    if (!isNaN(max)) result = result.filter((item) => item.price <= max);
+  }
+
+  const validSortFields = ["name", "price", "quantity", "createdAt"];
+  if (sortBy && validSortFields.includes(sortBy)) {
+    const dir = order === "desc" ? -1 : 1;
+    result.sort((a, b) => {
+      if (a[sortBy] < b[sortBy]) return -1 * dir;
+      if (a[sortBy] > b[sortBy]) return 1 * dir;
+      return 0;
+    });
   }
 
   sendResponse(res, 200, true, "Data item berhasil diambil", {
